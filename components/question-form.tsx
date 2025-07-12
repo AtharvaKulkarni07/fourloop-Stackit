@@ -100,8 +100,15 @@ export function QuestionForm() {
             placeholder="Include all the information someone would need to answer your question"
           />
         </div>
-        {errors.description && (
+        {errors.description && typeof errors.description.message === 'string' && (
           <p className="text-red-600 text-sm mt-1">{errors.description.message}</p>
+        )}
+        {errors.description && Array.isArray(errors.description.message) && (
+          <ul className="text-red-600 text-sm mt-1 list-disc ml-4">
+            {errors.description.message.map((msg: string, idx: number) => (
+              <li key={idx}>{msg}</li>
+            ))}
+          </ul>
         )}
       </div>
 

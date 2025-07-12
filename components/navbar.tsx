@@ -105,11 +105,11 @@ export function Navbar() {
               </>
             ) : (
               <div className="flex space-x-2">
-                <Button variant="outline" onClick={() => signIn()}>
-                  Sign In
+                <Button variant="outline" asChild>
+                  <Link href="/auth/signin">Sign In</Link>
                 </Button>
-                <Button onClick={() => signIn()}>
-                  Sign Up
+                <Button asChild>
+                  <Link href="/auth/signin">Sign Up</Link>
                 </Button>
               </div>
             )}

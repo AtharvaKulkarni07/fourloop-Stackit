@@ -1,36 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
 import Question from '@/models/Question';
 import User from '@/models/User';
 import { createQuestionSchema } from '@/lib/validations/question';
 
+// ✅ Helper to get session (compatible with App Router)
+async function getAuthSession(request: NextRequest) {
+  return await getServerSession(authOptions);
+}
+
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
-    
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
     const tag = searchParams.get('tag') || '';
-    
+
     const skip = (page - 1) * limit;
-    
+
     let query: any = { isApproved: true };
-    
+
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } }
       ];
     }
-    
+
     if (tag) {
       query.tags = { $in: [tag] };
     }
-    
+
     const questions = await Question.find(query)
       .populate('author', 'name email image reputation')
       .populate('answers')
@@ -38,9 +43,9 @@ export async function GET(request: NextRequest) {
       .skip(skip)
       .limit(limit)
       .lean();
-    
+
     const total = await Question.countDocuments(query);
-    
+
     return NextResponse.json({
       questions: questions.map(q => ({
         ...q,
@@ -66,45 +71,57 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
+
     const body = await request.json();
     const validation = createQuestionSchema.safeParse(body);
-    
+
     if (!validation.success) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: validation.error.issues 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: validation.error.issues,
+        },
+        { status: 400 }
+      );
     }
-    
+
     await dbConnect();
-    
+
     const user = await User.findOne({ email: session.user.email });
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
-    
-    const question = await Question.create({
+
+    const newQuestion = new Question({
       ...validation.data,
-      author: user._id
+      author: user._id,
     });
-    
-    const populatedQuestion = await Question.findById(question._id)
+
+    await newQuestion.save();
+
+    const populatedQuestion = await Question.findById(newQuestion._id)
       .populate('author', 'name email image reputation')
       .lean();
-    
-    return NextResponse.json({
-      ...populatedQuestion,
-      id: populatedQuestion._id.toString(),
-      author: {
-        ...populatedQuestion.author,
-        id: populatedQuestion.author._id.toString()
-      }
-    }, { status: 201 });
+
+    if (!populatedQuestion) {
+      return NextResponse.json({ error: 'Question not found after creation' }, { status: 500 });
+    }
+
+    return NextResponse.json(
+      {
+        ...populatedQuestion,
+        id: populatedQuestion._id.toString(),
+        author: {
+          ...populatedQuestion.author,
+          id: populatedQuestion.author._id.toString(),
+        },
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Error creating question:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
