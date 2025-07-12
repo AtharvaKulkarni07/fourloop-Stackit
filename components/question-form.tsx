@@ -1,57 +1,56 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { createQuestionSchema, CreateQuestionInput } from '@/lib/validations/question';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { RichTextEditor } from './ui/rich-text-editor';
-import { Badge } from './ui/badge';
-import { X } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { createQuestionSchema, CreateQuestionInput } from '@/lib/validations/question'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
+import { Label } from './ui/label'
+import { RichTextEditor } from './ui/rich-text-editor'
+import { Badge } from './ui/badge'
+import { X } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 export function QuestionForm() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [tagInput, setTagInput] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
-  const [description, setDescription] = useState('');
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [tagInput, setTagInput] = useState('')
+  const [tags, setTags] = useState<string[]>([])
+  const [description, setDescription] = useState('<p></p>') // initialize with valid HTML
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     setValue,
-    watch
   } = useForm<CreateQuestionInput>({
-    resolver: zodResolver(createQuestionSchema)
-  });
+    resolver: zodResolver(createQuestionSchema),
+  })
 
   const handleAddTag = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      const tag = tagInput.trim().toLowerCase();
-      
+      e.preventDefault()
+      const tag = tagInput.trim().toLowerCase()
+
       if (tag && !tags.includes(tag) && tags.length < 5) {
-        const newTags = [...tags, tag];
-        setTags(newTags);
-        setValue('tags', newTags);
-        setTagInput('');
+        const newTags = [...tags, tag]
+        setTags(newTags)
+        setValue('tags', newTags)
+        setTagInput('')
       }
     }
-  };
+  }
 
   const removeTag = (tagToRemove: string) => {
-    const newTags = tags.filter(tag => tag !== tagToRemove);
-    setTags(newTags);
-    setValue('tags', newTags);
-  };
+    const newTags = tags.filter((tag) => tag !== tagToRemove)
+    setTags(newTags)
+    setValue('tags', newTags)
+  }
 
   const onSubmit = async (data: CreateQuestionInput) => {
-    setLoading(true);
+    setLoading(true)
 
     try {
       const response = await fetch('/api/questions', {
@@ -60,21 +59,21 @@ export function QuestionForm() {
         body: JSON.stringify({
           ...data,
           description,
-          tags
-        })
-      });
+          tags,
+        }),
+      })
 
-      if (!response.ok) throw new Error('Failed to create question');
+      if (!response.ok) throw new Error('Failed to create question')
 
-      const question = await response.json();
-      toast.success('Question created successfully!');
-      router.push(`/questions/${question.id}`);
+      const question = await response.json()
+      toast.success('Question created successfully!')
+      router.push(`/questions/${question.id}`)
     } catch (error) {
-      toast.error('Failed to create question');
+      toast.error('Failed to create question')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -86,9 +85,7 @@ export function QuestionForm() {
           placeholder="What's your programming question? Be specific."
           className="mt-1"
         />
-        {errors.title && (
-          <p className="text-red-600 text-sm mt-1">{errors.title.message}</p>
-        )}
+        {errors.title && <p className="text-red-600 text-sm mt-1">{errors.title.message}</p>}
       </div>
 
       <div>
@@ -97,8 +94,8 @@ export function QuestionForm() {
           <RichTextEditor
             content={description}
             onChange={(content) => {
-              setDescription(content);
-              setValue('description', content);
+              setDescription(content)
+              setValue('description', content)
             }}
             placeholder="Include all the information someone would need to answer your question"
           />
@@ -134,23 +131,17 @@ export function QuestionForm() {
             </Badge>
           ))}
         </div>
-        {errors.tags && (
-          <p className="text-red-600 text-sm mt-1">{errors.tags.message}</p>
-        )}
+        {errors.tags && <p className="text-red-600 text-sm mt-1">{errors.tags.message}</p>}
       </div>
 
       <div className="flex gap-4">
         <Button type="submit" disabled={loading}>
           {loading ? 'Publishing...' : 'Publish Question'}
         </Button>
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={() => router.push('/')}
-        >
+        <Button type="button" variant="outline" onClick={() => router.push('/')}>
           Cancel
         </Button>
       </div>
     </form>
-  );
+  )
 }
