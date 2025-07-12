@@ -50,8 +50,25 @@ export function QuestionForm() {
   }
 
   const onSubmit = async (data: CreateQuestionInput) => {
+    // Client-side validation before sending to backend
+    if (!data.title || data.title.length < 10) {
+      toast.error('Title must be at least 10 characters.')
+      return;
+    }
+    const plainDesc = description.replace(/<[^>]+>/g, '').trim();
+    if (!plainDesc || plainDesc.length < 20) {
+      toast.error('Description must be at least 20 characters.')
+      return;
+    }
+    if (!tags.length) {
+      toast.error('At least one tag is required.')
+      return;
+    }
+    if (tags.some(tag => tag.length < 2 || tag.length > 20)) {
+      toast.error('Each tag must be between 2 and 20 characters.')
+      return;
+    }
     setLoading(true)
-
     try {
       const response = await fetch('/api/questions', {
         method: 'POST',
@@ -62,9 +79,11 @@ export function QuestionForm() {
           tags,
         }),
       })
-
-      if (!response.ok) throw new Error('Failed to create question')
-
+      if (!response.ok) {
+        const errorData = await response.json();
+        toast.error(errorData?.error || 'Failed to create question')
+        return;
+      }
       const question = await response.json()
       toast.success('Question created successfully!')
       router.push(`/questions/${question.id}`)
@@ -93,7 +112,7 @@ export function QuestionForm() {
         <div className="mt-1">
           <RichTextEditor
             content={description}
-            onChange={(content) => {
+            onChange={(content: string) => {
               setDescription(content)
               setValue('description', content)
             }}

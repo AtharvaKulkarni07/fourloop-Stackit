@@ -46,9 +46,6 @@ export default function SignInPage() {
     signIn('google', { callbackUrl: '/' });
   };
 
-  const handleGitHubSignIn = () => {
-    signIn('github', { callbackUrl: '/' });
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -69,15 +66,7 @@ export default function SignInPage() {
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="h-4 w-4 mr-2"><path fill="#4285F4" d="M24 9.5c3.54 0 6.73 1.22 9.24 3.22l6.93-6.93C36.45 2.34 30.59 0 24 0 14.61 0 6.27 5.7 1.98 14.02l8.06 6.27C12.41 13.16 17.74 9.5 24 9.5z"/><path fill="#34A853" d="M46.1 24.5c0-1.64-.15-3.22-.43-4.75H24v9.02h12.44c-.54 2.92-2.18 5.39-4.64 7.06l7.18 5.59C43.73 37.41 46.1 31.44 46.1 24.5z"/><path fill="#FBBC05" d="M10.04 28.29c-.6-1.77-.94-3.65-.94-5.79s.34-4.02.94-5.79l-8.06-6.27C.34 13.98 0 18.09 0 24c0 5.91.34 10.02 1.98 14.02l8.06-6.27z"/><path fill="#EA4335" d="M24 48c6.59 0 12.13-2.18 16.18-5.95l-7.18-5.59c-2.01 1.35-4.59 2.15-7.5 2.15-6.26 0-11.59-3.66-14.02-8.79l-8.06 6.27C6.27 42.3 14.61 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
             Continue with Google
           </Button>
-          <Button
-            onClick={handleGitHubSignIn}
-            variant="outline"
-            className="w-full"
-          >
-            <Github className="h-4 w-4 mr-2" />
-            Continue with GitHub
-          </Button>
-          
+             
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
